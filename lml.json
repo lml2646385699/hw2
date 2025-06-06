@@ -1,0 +1,23 @@
+{
+  "auth": {
+    "identity": {
+      "methods": [
+        "password"
+      ],
+      "password": {
+        "user": {
+          "domain": {
+            "name": "hid_k20ua0h46uflale"
+          },
+          "name": "lml",
+          "password": "lml123456"
+        }
+      }
+    },
+    "scope": {
+      "domain": {
+        "name": "hid_k20ua0h46uflale"
+      }
+    }
+  }
+}
