@@ -68,29 +68,32 @@ Underwater images commonly suffer from foreground background ambiguity, loss of 
 ​		用深度可分离卷积显式提取图像中的边缘、梯度等高频信息，同时控制计算量。
 
 ​                 给定输入特征 $F \in \mathbb{R}^{H \times W \times C}$，输出结构先验特征：
-$$
+```math
 F_{SCT}=\mathcal{W}_{pw} \circledast \sigma\left(\mathcal{W}_{dw} \circledast F\right)
-$$
-​		其中 $\mathcal{W}_{dw}$ 为深度卷积权重，$\mathcal{W}_{pw}$ 为逐点卷积权重，$\sigma(\cdot)$ 为 ReLU 激活，$\circledast$ 表示卷积操作	
-
+```
+```math
+​		其中 \mathcal{W}_{dw} 为深度卷积权重，\mathcal{W}_{pw} 为逐点卷积权重，\sigma(\cdot) 为 ReLU 激活，\circledast 表示卷积操作	
+```
 ​		2）：双路径校正单元：噪声过滤与特征精细化
 
 ​		并行通道注意力与空间注意力，对高频特征做动态调制，抑制背景噪声，强化目标区域的结构特征，最终拼接得到精细化残差特征：
 
 ​		
-$$
+```math
 F_{RGFE}=\Phi \left( \left[ F_{SCT}\| \left(\mathcal{A}_{c}(F_{SCT})\otimes \mathcal{A}_{s}\left(F_{SCT}\right) \otimes F\right)\right]\right)
-$$
-​		其中 $\mathcal{A}_c(\cdot)$、$\mathcal{A}_s(\cdot)$ 分别为通道、空间注意力调制器，$\otimes$ 为逐元素相乘，$[\cdot \| \cdot]$ 为通道拼接，$\Phi(\cdot)$ 为复合映射函数。
-
+```
+```math
+​		其中 \mathcal{A}_c(\cdot)、\mathcal{A}_s(\cdot) 分别为通道、空间注意力调制器，\otimes 为逐元素相乘，[\cdot \| \cdot] 为通道拼接，\Phi(\cdot) 为复合映射函数。
+```
 ​		3）：残差校准机制：结构信息注入语义流
 
 ​		通过上下采样匹配特征尺度，以可学习强度系数 $\lambda$ 动态控制残差权重，将恢复的结构细节融合回原始语义特征：
-$$
+```math
 F_{RF}=\mathcal{H}_{SCT}\left(\mathcal{D}_{\downarrow s}(F)\right) \oplus \lambda \cdot \mathcal{H}_{RGFE}\left(\mathcal{U}_{\uparrow s}\left(\mathcal{D}_{\downarrow s}(F)\right)\right)
-$$
-​		其中 $\mathcal{D}_{\downarrow s}(\cdot)$、$\mathcal{U}_{\uparrow s}(\cdot)$ 为空间下采样、上采样算子，$\oplus$ 为逐元素相加，$\lambda$ 为可学习强度系数。		
-
+```
+```math
+​		其中 \mathcal{D}_{\downarrow s}(\cdot)、\mathcal{U}_{\uparrow s}(\cdot) 为空间下采样、上采样算子，\oplus 为逐元素相加，\lambda 为可学习强度系数。		
+```
 ​	（2）层级特征校准金字塔模块（HFCP）
 
 ​	HFCP 采用双路径校准框架 + 聚类引导语义校准，实现跨尺度语义一致性与空间对齐。
@@ -106,37 +109,37 @@ $$
 ​			CGCA 通过 K-means 构造少量全局语义原型，将像素级特征与语义原型进行匹配，从而降低传统 Non-local 像素两两关系建模的计算和噪声敏感性。
 
 ​		核心公式：
-$$
+```math
 \mu_{k}=\frac{1}{|c_{k}|} \sum_{F_{PA} \in c_{k}} F_{PA},\quad F_{att}=\sum_{k=1}^{K} \frac{\exp(p_{i}^{T} v_{k})}{\sum_{j=1}^{K} \exp(p_{i}^{T} v_{j})} \cdot v_{k}
-$$
+```
 ​	（3）任务自适应联合损失函数
 
  	   把最后一层的特征输入双任务检测头，分别完成分类与定位，用联合损失函数监督训练。
 
 ​	总损失由分类损失与回归损失加权组成：
-$$
+```math
 \mathcal{L}_{total}=\lambda_{cls} \cdot \mathcal{L}_{cls}+\lambda_{reg} \cdot \mathcal{L}_{reg}
-$$
-​	其中 $\lambda_{\text{cls}}=1$，$\lambda_{\text{reg}}=2$。
-
+```
+```math
+​	其中 \lambda_{\text{cls}}=1，\lambda_{\text{reg}}=2。
+```
 ​		1）：分类损失：任务自适应质量焦点损失
 
 ​		引入连续质量标签（由预测 IoU 与中心度得分几何加权得到），替代传统离散二元标签，同时加入聚焦因子引导网络关注难样本：
-$$
+```math
 \hat{y}_i = \text{IoU}_i^{\rho} \cdot \text{Centerness}_i^{1-\rho}
-$$
+```
 
-$$
+```math
 \mathcal{L}_{cls} = -\frac{1}{N_{\text{pos}}} \sum_{i=1}^{N} \left| \hat{y}_i - p_i \right|^{\gamma} \times \left( \hat{y}_i \log(p_i) + (1-\hat{y}_i) \log(1-p_i) \right)
-$$
+```
 
 ​		2）：回归损失：GIoU 损失
 
 ​		采用广义交并比损失衡量预测框与真实框的几何一致性，提升模糊边界下的定位精度：
-$$
+```math
 \mathcal{L}_{\text{reg}} = \frac{1}{N_{\text{pos}}} \sum_{i=1}^{N_{\text{pos}}} \mathcal{L}_{\text{GIoU}}\left(B_{i}^{\text{pred}}, B_{i}^{\text{gt}}\right)
-$$
-
+```
 
 优点：
 
